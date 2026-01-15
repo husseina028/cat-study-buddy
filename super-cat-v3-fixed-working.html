@@ -1,0 +1,1724 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Super Cat v3 FIXED — Voice + Feeding + Petting + Focus Timer</title>
+  <style>
+    :root{
+      --bg1:#070a16;
+      --bg2:#121a33;
+      --panel:#0f1730cc;
+      --text:#ecf1ff;
+      --muted:#b8c3ffcc;
+      --shadow: 0 18px 45px rgba(0,0,0,.45);
+      --radius:18px;
+
+      --catW: 350px;
+      --catH: 300px;
+
+      --furA:#ffffff;
+      --furB:#dfe6ff;
+      --furLine:#c5d0ff;
+      --noseA:#ff9fb1;
+      --noseB:#ff7fa0;
+      --mint:#67f5a6;
+      --aqua:#7ef0ff;
+      --amber:#ffb86b;
+      --rose:#ff6aa8;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background:
+        radial-gradient(1200px 900px at 18% 20%, #1d2a6a55 0%, transparent 60%),
+        radial-gradient(900px 700px at 70% 35%, #2a9df455 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+
+    .app{
+      height:100%;
+      display:grid;
+      grid-template-columns: 1fr minmax(270px, 340px);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .stage{
+      position:relative;
+      border:1px solid #1e2a52;
+      border-radius: var(--radius);
+      background:
+        radial-gradient(900px 700px at 30% 35%, #1c2b5a88 0%, transparent 60%),
+        radial-gradient(600px 500px at 70% 70%, #2e3b7a66 0%, transparent 60%),
+        linear-gradient(180deg, #0d1530, #070a16);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      min-height: 520px;
+    }
+
+    .hud{
+      position:absolute;
+      top:12px; left:12px; right:12px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      pointer-events:none;
+      z-index: 10;
+    }
+    .hud .card{
+      pointer-events:auto;
+      background: var(--panel);
+      border:1px solid #24335f;
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      max-width: 760px;
+    }
+    .hud h1{ margin:0 0 6px; font-size: 14px; letter-spacing:.2px; }
+    .hud p{ margin:0; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+
+    .controls{
+      margin-left:auto;
+      display:flex;
+      gap:10px;
+      pointer-events:auto;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      appearance:none;
+      border:none;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 820;
+      font-size: 12.5px;
+      color: #071225;
+      background: linear-gradient(180deg, var(--aqua), #4ed0ff);
+      box-shadow: 0 12px 26px rgba(126,240,255,.20);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+      white-space:nowrap;
+    }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn.secondary{
+      color: var(--text);
+      background: linear-gradient(180deg, #2a3766, #1d274b);
+      border:1px solid #2b3a6f;
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+    }
+    .btn:disabled{ filter: grayscale(0.4) brightness(.85); cursor:not-allowed; }
+
+    /* Right panel */
+    .side{
+      border:1px solid #1e2a52;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, #0e1632cc, #070a16cc);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height: 520px;
+    }
+    .sideHeader{
+      padding: 12px;
+      border-bottom:1px solid #20305b;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .sideHeader .title{ font-weight: 950; letter-spacing:.2px; font-size: 13px; }
+    .pill{
+      font-size: 11px;
+      color: #071225;
+      background: linear-gradient(180deg, var(--mint), #39d8ff);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 950;
+      white-space:nowrap;
+    }
+    .sideBody{
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      overflow:auto;
+    }
+
+    .meter{
+      border:1px solid #24335f;
+      background: #0a122b;
+      border-radius: 14px;
+      padding: 10px;
+    }
+    .meterRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .bar{
+      width:100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #111a35;
+      border:1px solid #1f2b53;
+      overflow:hidden;
+    }
+    .bar > i{
+      display:block;
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, var(--aqua), var(--mint), var(--amber));
+      border-radius: 999px;
+      transition: width .08s linear;
+    }
+    .tiny{
+      font-size: 11px;
+      color:#b8c3ff99;
+      margin-top: 8px;
+      line-height: 1.35;
+    }
+
+    .foodGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .food{
+      border:1px solid #24335f;
+      background: linear-gradient(180deg, #151f41, #111a36);
+      border-radius: 16px;
+      padding: 10px;
+      cursor: grab;
+      user-select:none;
+      box-shadow: 0 12px 26px rgba(0,0,0,.20);
+      transition: transform .15s ease, border-color .15s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .food:hover{ transform: translateY(-1px); border-color:#3651a0; }
+    .food:active{ cursor:grabbing; transform: translateY(0) scale(.99); }
+    .food .emoji{ font-size: 26px; line-height: 1; margin-bottom: 6px; filter: drop-shadow(0 10px 10px rgba(0,0,0,.25)); }
+    .food .name{ font-size: 12.5px; font-weight: 950; margin-bottom: 2px; }
+    .food .desc{ font-size: 11px; color:#b8c3ffb0; line-height: 1.25; }
+    .food .count{
+      position:absolute;
+      top:8px; right:8px;
+      font-size: 11px;
+      font-weight: 950;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #0b1330;
+      border: 1px solid #22305a;
+      color: #dfe6ff;
+    }
+
+    /* Drag ghost */
+    .ghost{
+      position:fixed;
+      left:0; top:0;
+      transform: translate(-9999px,-9999px);
+      pointer-events:none;
+      z-index: 9999;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border:1px solid #2e4aa0;
+      background: linear-gradient(180deg, #18224b, #10193a);
+      box-shadow: 0 18px 45px rgba(0,0,0,.40);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      opacity:0;
+      transition: opacity .12s ease;
+    }
+    .ghost.show{ opacity:1; }
+    .ghost .emoji{ font-size: 22px; }
+    .ghost .label{ font-size: 12px; font-weight:950; }
+
+    /* Cat draggable container */
+    .catWrap{
+      position:absolute;
+      left: 120px;
+      top: 210px;
+      width: var(--catW);
+      height: var(--catH);
+      touch-action:none;
+      user-select:none;
+      cursor: grab;
+      transform: translateZ(0);
+      will-change: left, top, transform;
+      z-index: 2;
+    }
+    .catWrap.dragging{ cursor:grabbing; }
+    .catWrap.dropReady .cat{
+      filter:
+        drop-shadow(0 0 30px rgba(103,245,166,.25))
+        drop-shadow(0 0 40px rgba(126,240,255,.18));
+    }
+
+    /* CAT */
+    .cat{
+      position:absolute;
+      inset:0;
+      margin:auto;
+      width:100%;
+      height:100%;
+      transform-origin: 50% 75%;
+      animation: idleBob 2.8s ease-in-out infinite;
+      will-change: transform;
+      --earL: 0deg;
+      --earR: 0deg;
+      --headTilt: 0deg;
+      --blink: 0;
+      --squint: 0;
+      --mouthOpen: 0;
+      --jaw: 0;
+      --pupilX: 0px;
+      --pupilY: 0px;
+      --tailSpeed: 1;
+      --tailAmp: 1;
+      --tongue: 0;
+      --petGlow: 0;
+      --earTwitch: 0deg;
+      --focusAura: 0;
+    }
+    .cat::after{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius: 34px;
+      pointer-events:none;
+      opacity: calc(var(--petGlow) * .9 + var(--focusAura) * .85);
+      background:
+        radial-gradient(circle at 50% 65%, rgba(126,240,255,.18), transparent 55%),
+        radial-gradient(circle at 40% 20%, rgba(255,106,168,.10), transparent 45%),
+        radial-gradient(circle at 60% 25%, rgba(103,245,166,.10), transparent 48%);
+      filter: blur(8px);
+      transition: opacity .2s ease;
+    }
+
+    /* States */
+    .cat.state-listening{ animation: listenBob 1.25s ease-in-out infinite; }
+    .cat.state-eating{ animation: eatBob .50s ease-in-out infinite; }
+    .cat.state-playful{ animation: playful 1.0s ease-in-out infinite; }
+    .cat.state-purring{ animation: purrNuzzle .55s ease-in-out infinite; }
+    .cat.state-sleeping{ animation: sleepBreath 2.2s ease-in-out infinite; }
+    .cat.state-licking{ animation: lickBob .65s ease-in-out infinite; }
+    .cat.state-focus{ animation: focusCalm 1.8s ease-in-out infinite; }
+    .catWrap.dragging .cat{ animation: dragWiggle .32s ease-in-out infinite; }
+
+    @keyframes idleBob{ 0%,100%{ transform: translateY(0) rotate(-.6deg); } 50%{ transform: translateY(6px) rotate(.6deg); } }
+    @keyframes listenBob{ 0%,100%{ transform: translateY(0) rotate(.2deg) scale(1.01); } 50%{ transform: translateY(4px) rotate(-.2deg) scale(1.02); } }
+    @keyframes eatBob{ 0%,100%{ transform: translateY(2px) rotate(.1deg) scale(1.01); } 50%{ transform: translateY(7px) rotate(-.1deg) scale(1.02); } }
+    @keyframes playful{ 0%,100%{ transform: translateY(0) rotate(-1.7deg) scale(1.01); } 50%{ transform: translateY(11px) rotate(1.7deg) scale(1.03); } }
+    @keyframes purrNuzzle{ 0%,100%{ transform: translateY(3px) rotate(-.5deg) scale(1.02); } 50%{ transform: translateY(9px) rotate(.5deg) scale(1.03); } }
+    @keyframes sleepBreath{ 0%,100%{ transform: translateY(7px) rotate(.25deg) scale(1.01); } 50%{ transform: translateY(11px) rotate(-.25deg) scale(1.02); } }
+    @keyframes lickBob{ 0%,100%{ transform: translateY(3px) rotate(.2deg) scale(1.02); } 50%{ transform: translateY(8px) rotate(-.2deg) scale(1.03); } }
+    @keyframes focusCalm{ 0%,100%{ transform: translateY(4px) rotate(.2deg) scale(1.01); } 50%{ transform: translateY(7px) rotate(-.2deg) scale(1.015); } }
+    @keyframes dragWiggle{ 0%,100%{ transform: translateY(2px) rotate(-1.2deg) scale(1.01); } 50%{ transform: translateY(6px) rotate(1.2deg) scale(1.02); } }
+
+    /* Ground shadow */
+    .shadow{
+      position:absolute;
+      left: 50%;
+      top: 270px;
+      transform: translateX(-50%);
+      width: 275px;
+      height: 30px;
+      background: radial-gradient(circle at 50% 50%, rgba(0,0,0,.45), transparent 68%);
+      filter: blur(2px);
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    /* Body */
+    .body{
+      position:absolute;
+      left: 50%;
+      top: 142px;
+      transform: translateX(-50%);
+      width: 245px;
+      height: 164px;
+      background: linear-gradient(180deg, var(--furA), var(--furB));
+      border: 2px solid var(--furLine);
+      border-radius: 105px 105px 78px 78px;
+      box-shadow: 0 18px 34px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .body::before{
+      content:"";
+      position:absolute;
+      inset: auto -14px -28px -14px;
+      height: 76px;
+      background: radial-gradient(circle at 50% 0%, rgba(184,195,255,.40), transparent 70%);
+      transform: rotate(1deg);
+    }
+    .body .belly{
+      position:absolute;
+      left:50%;
+      top: 50px;
+      transform: translateX(-50%);
+      width: 170px;
+      height: 110px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 50% 35%, #ffffffd8, #dfe6ff70 70%);
+      border: 1px solid rgba(197,208,255,.55);
+      filter: blur(.2px);
+    }
+    .stripe{ position:absolute; width: 74px; height: 18px; border-radius: 999px; background: rgba(183,195,255,.34); filter: blur(.2px); transform: rotate(-12deg); left: 18px; top: 56px; }
+    .stripe.s2{ left: 34px; top: 84px; width: 82px; transform: rotate(-20deg); opacity:.78; }
+    .stripe.s3{ right: 14px; left:auto; top: 62px; width: 76px; transform: rotate(16deg); opacity:.72; }
+    .stripe.s4{ right: 22px; left:auto; top: 92px; width: 86px; transform: rotate(22deg); opacity:.66; }
+
+    /* Tail */
+    .tail{
+      position:absolute;
+      left: 18px;
+      top: 188px;
+      width: 152px;
+      height: 32px;
+      background: linear-gradient(180deg, var(--furA), var(--furB));
+      border:2px solid var(--furLine);
+      border-radius: 999px;
+      transform-origin: 92% 50%;
+      transform: rotate(-12deg);
+      animation: tailSway calc(1.9s / var(--tailSpeed)) ease-in-out infinite;
+      will-change: transform;
+      overflow:hidden;
+    }
+    .tail::after{ content:""; position:absolute; inset: 6px 14px 6px 14px; border-radius: 999px; background: rgba(183,195,255,.28); transform: rotate(2deg); opacity:.75; }
+    @keyframes tailSway{ 0%,100%{ transform: rotate(calc(-16deg * var(--tailAmp))); } 50%{ transform: rotate(calc(10deg * var(--tailAmp))); } }
+
+    /* Legs */
+    .legs{
+      position:absolute;
+      left: 50%;
+      top: 256px;
+      transform: translateX(-50%);
+      width: 265px;
+      height: 44px;
+      display:flex;
+      justify-content:space-between;
+      padding: 0 16px;
+      pointer-events:none;
+    }
+    .leg{
+      width: 54px;
+      height: 38px;
+      background: linear-gradient(180deg, var(--furA), var(--furB));
+      border:2px solid var(--furLine);
+      border-radius: 999px;
+      transform-origin: 50% 20%;
+      animation: legIdle 1.2s ease-in-out infinite;
+      will-change: transform;
+      position:relative;
+      overflow:hidden;
+    }
+    .leg::after{ content:""; position:absolute; left: 50%; bottom: 6px; transform: translateX(-50%); width: 32px; height: 10px; border-radius: 999px; background: rgba(183,195,255,.25); opacity:.7; }
+    .leg:nth-child(2){ animation-delay:.15s; }
+    .leg:nth-child(3){ animation-delay:.3s; }
+    .leg:nth-child(4){ animation-delay:.45s; }
+    @keyframes legIdle{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(2px); } }
+    .catWrap.dragging .leg{ animation: legWalk .16s ease-in-out infinite; }
+    @keyframes legWalk{ 0%,100%{ transform: translateY(0) rotate(-10deg); } 50%{ transform: translateY(3px) rotate(10deg); } }
+
+    /* Head */
+    .head{
+      position:absolute;
+      left: 50%;
+      top: 34px;
+      width: 202px;
+      height: 152px;
+      transform: translateX(-50%) rotate(var(--headTilt));
+      transform-origin: 50% 70%;
+      background: linear-gradient(180deg, var(--furA), var(--furB));
+      border-radius: 86px 86px 72px 72px;
+      border: 2px solid var(--furLine);
+      box-shadow: 0 18px 34px rgba(0,0,0,.20);
+      overflow:hidden;
+      will-change: transform;
+    }
+    .head::after{ content:""; position:absolute; inset:auto -22% -36% -22%; height: 88px; background: radial-gradient(circle at 50% 0%, rgba(184,195,255,.45), transparent 70%); transform: rotate(2deg); }
+
+    /* Ears */
+    .ear{
+      position:absolute;
+      top: -34px;
+      width: 72px;
+      height: 84px;
+      background: linear-gradient(180deg, var(--furA), var(--furB));
+      border: 2px solid var(--furLine);
+      border-radius: 16px 16px 70px 70px;
+      transform-origin: 50% 80%;
+      overflow:hidden;
+      will-change: transform;
+    }
+    .ear::before{ content:""; position:absolute; inset: 12px 12px 18px 12px; background: radial-gradient(circle at 50% 30%, rgba(255,177,194,.60), transparent 70%); border-radius: 10px 10px 50px 50px; }
+    .ear.left{ left: 20px; transform: rotate(calc(-15deg + var(--earL) + var(--earTwitch))); }
+    .ear.right{ right: 20px; transform: rotate(calc(15deg + var(--earR) - var(--earTwitch))); }
+
+    /* Face */
+    .face{ position:absolute; inset: 40px 16px 18px 16px; }
+
+    .eyes{
+      position:absolute;
+      top: 22px;
+      left:0; right:0;
+      display:flex;
+      justify-content:space-between;
+      padding: 0 10px;
+      gap: 10px;
+    }
+    .eye{
+      width: 52px;
+      height: 46px;
+      background: radial-gradient(circle at 50% 45%, #1b2a52, #070a16);
+      border-radius: 999px;
+      position:relative;
+      overflow:hidden;
+      transform: scaleY(calc(1 - var(--blink))) scaleY(calc(1 - (var(--squint) * .60)));
+      transition: transform .08s linear;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,.06),
+        0 10px 18px rgba(0,0,0,.22);
+    }
+    .eye::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: radial-gradient(circle at 50% 65%, rgba(103,245,166,.22), transparent 60%);
+      opacity:.95;
+    }
+    .sparkle{ position:absolute; width: 10px; height: 10px; border-radius: 999px; background: radial-gradient(circle at 35% 35%, #fff, #d9f5ff); left: 12px; top: 10px; opacity:.9; }
+    .sparkle.s2{ width: 6px; height: 6px; left: 30px; top: 18px; opacity:.75; }
+    .pupil{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      transform: translate(calc(-50% + var(--pupilX)), calc(-50% + var(--pupilY)));
+      border-radius: 999px;
+      background: radial-gradient(circle at 35% 35%, #ffffff, #bfeaff);
+      opacity:.92;
+      filter: drop-shadow(0 6px 8px rgba(0,0,0,.3));
+    }
+
+    .muzzle{
+      position:absolute;
+      left:50%;
+      top: 70px;
+      transform: translateX(-50%);
+      width: 122px;
+      height: 82px;
+      border-radius: 62px;
+      background: radial-gradient(circle at 50% 35%, #ffffffdc, #dfe6ff98 75%);
+      border: 1px solid rgba(197,208,255,.70);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.35);
+    }
+    .nose{
+      position:absolute;
+      left:50%;
+      top: 86px;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 14px;
+      background: linear-gradient(180deg, var(--noseA), var(--noseB));
+      border-radius: 0 0 10px 10px;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,.15));
+      z-index: 3;
+    }
+
+    .cheek{
+      position:absolute;
+      top: 98px;
+      width: 18px;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,177,194,.28);
+      filter: blur(.2px);
+      opacity: calc(.22 + var(--petGlow) * .70 + var(--focusAura) * .35);
+      transition: opacity .2s ease;
+    }
+    .cheek.l{ left: 36px; }
+    .cheek.r{ right: 36px; }
+
+    .whiskers{
+      position:absolute;
+      left:0; right:0;
+      top: 98px;
+      display:flex;
+      justify-content:space-between;
+      padding: 0 10px;
+      z-index:2;
+      opacity:.9;
+    }
+    .whiskers .sideW{ width: 70px; height: 24px; position:relative; }
+    .whiskers .sideW i{
+      position:absolute;
+      left:0; right:0;
+      height:2px;
+      background: #aab6e6;
+      border-radius: 99px;
+      transform-origin: 0% 50%;
+    }
+    .whiskers .sideW.left i{ transform-origin: 100% 50%; }
+    .whiskers .sideW i:nth-child(1){ top: 2px; transform: rotate(10deg); }
+    .whiskers .sideW i:nth-child(2){ top: 11px; transform: rotate(0deg); }
+    .whiskers .sideW i:nth-child(3){ top: 20px; transform: rotate(-10deg); }
+
+    .mouth{
+      position:absolute;
+      left: 50%;
+      top: 112px;
+      width: 58px;
+      height: 38px;
+      transform: translateX(-50%);
+      z-index: 4;
+    }
+    .mouth .line{
+      position:absolute;
+      top: 8px;
+      width: 26px;
+      height: 18px;
+      border: 2px solid #9aa7d6;
+      border-top: none;
+      border-left: none;
+      border-radius: 0 0 16px 0;
+      opacity:.95;
+    }
+    .mouth .line.l{ left: 0; transform: rotate(15deg); }
+    .mouth .line.r{ right: 0; transform: scaleX(-1) rotate(15deg); }
+    .jaw{
+      position:absolute;
+      left:50%;
+      top: 14px;
+      transform: translateX(-50%) translateY(calc(var(--jaw) * 10px));
+      width: 30px;
+      height: 19px;
+      background: radial-gradient(circle at 50% 25%, #ff6a90, #c61f46);
+      border-radius: 0 0 999px 999px;
+      opacity: clamp(0, calc(var(--mouthOpen) + var(--jaw)), 1);
+      transition: transform .04s linear, opacity .04s linear;
+      overflow:hidden;
+      box-shadow: 0 8px 14px rgba(0,0,0,.25);
+    }
+    .jaw::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom: -4px;
+      transform: translateX(-50%) scaleY(var(--tongue));
+      width: 16px;
+      height: 16px;
+      background: radial-gradient(circle at 50% 35%, #ff9ab2, #ff5f8c);
+      border-radius: 999px;
+      opacity: .9;
+    }
+
+    /* Particles */
+    .particle{
+      position:absolute;
+      left:0; top:0;
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #fff, var(--aqua));
+      pointer-events:none;
+      opacity:.95;
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,.25));
+      will-change: transform, opacity;
+    }
+    .particle.crumb{
+      width: 7px;
+      height: 7px;
+      background: radial-gradient(circle at 30% 30%, #fff6, var(--amber));
+    }
+    .particle.heart{
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle at 30% 30%, #fff, var(--rose));
+      clip-path: path("M7 12 C7 12 1 8 1 4.5 C1 2.6 2.6 1 4.5 1 C5.6 1 6.6 1.6 7 2.4 C7.4 1.6 8.4 1 9.5 1 C11.4 1 13 2.6 13 4.5 C13 8 7 12 7 12 Z");
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,.25));
+    }
+
+    /* Focus Timer Dock (bottom) */
+    .timerDock{
+      position:absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+      z-index: 9;
+    }
+    .timer{
+      pointer-events:auto;
+      width: min(920px, 100%);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(15,23,48,.88), rgba(10,18,43,.88));
+      border:1px solid #24335f;
+      box-shadow: 0 14px 32px rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+    }
+    .timerLeft{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 210px;
+    }
+    .timerBadge{
+      width: 34px;
+      height: 34px;
+      display:grid;
+      place-items:center;
+      border-radius: 12px;
+      border:1px solid #2a3a6d;
+      background: linear-gradient(180deg, #18224b, #10193a);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      font-size: 16px;
+    }
+    .timerTitle{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      line-height:1.1;
+    }
+    .timerTitle b{ font-size: 12.5px; }
+    .timerTitle span{ font-size: 11px; color: var(--muted); }
+    .timeBig{
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .6px;
+      font-weight: 950;
+      font-size: 22px;
+      min-width: 110px;
+      text-align:center;
+    }
+    .timerControls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .field{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border:1px solid #24335f;
+      border-radius: 14px;
+      background: rgba(10,18,43,.55);
+    }
+    .field label{
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 850;
+      letter-spacing:.2px;
+    }
+    .field input{
+      width: 74px;
+      background: transparent;
+      border:none;
+      outline:none;
+      color: var(--text);
+      font-weight: 900;
+      font-size: 12.5px;
+    }
+    .timerBtn{
+      appearance:none;
+      border:none;
+      border-radius: 14px;
+      padding: 9px 12px;
+      font-weight: 900;
+      font-size: 12px;
+      cursor:pointer;
+      color:#071225;
+      background: linear-gradient(180deg, var(--mint), #39d8ff);
+      box-shadow: 0 12px 26px rgba(103,245,166,.14);
+      user-select:none;
+      transition: transform .15s ease, filter .15s ease;
+      white-space:nowrap;
+    }
+    .timerBtn:active{ transform: translateY(1px) scale(.99); }
+    .timerBtn.secondary{
+      color: var(--text);
+      background: linear-gradient(180deg, #2a3766, #1d274b);
+      border:1px solid #2b3a6f;
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+    }
+    .timerBtn.danger{
+      color: #2b0b16;
+      background: linear-gradient(180deg, #ff8fb4, #ff6aa8);
+      box-shadow: 0 12px 26px rgba(255,106,168,.16);
+    }
+    .timerHint{
+      font-size: 11px;
+      color:#b8c3ff99;
+      margin-left: 6px;
+      white-space:nowrap;
+    }
+
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .app{
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(520px, 56vh) auto;
+        overflow:auto;
+      }
+      .side{ min-height: unset; }
+      .stage{ min-height: 600px; }
+      .timerLeft{ min-width: unset; }
+      .timeBig{ font-size: 20px; }
+      .timerControls{ justify-content:flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="stage" id="stage">
+      <div class="hud">
+        <div class="card">
+          <h1>Super Cat v3 — FIXED ✅ (Everything clickable again)</h1>
+          <p>
+            • <b>Enable Mic</b> → read out loud → cat reacts to <b>voice frequency & volume</b> (no commands).<br>
+            • Drag <b>food</b> from the right panel onto the cat (infinite). Cat does a <b>chomp/chew</b> animation.<br>
+            • Tap the cat to pet (purr + hearts). Drag the cat to move it. Timer buttons work.
+          </p>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="micBtn">Enable Mic</button>
+          <button class="btn secondary" id="playBtn">Playful</button>
+          <button class="btn secondary" id="sleepBtn">Nap</button>
+        </div>
+      </div>
+
+      <!-- Bottom Focus Timer -->
+      <div class="timerDock" aria-label="Focus Timer">
+        <div class="timer" id="timer">
+          <div class="timerLeft">
+            <div class="timerBadge">⏳</div>
+            <div class="timerTitle">
+              <b>Focus Timer</b>
+              <span id="timerMode">Ready</span>
+            </div>
+          </div>
+
+          <div class="timeBig" id="timeBig">25:00</div>
+
+          <div class="timerControls">
+            <div class="field" title="Edit minutes and seconds, then press Set">
+              <label for="mins">Min</label>
+              <input id="mins" type="number" min="0" max="999" value="25" />
+              <label for="secs">Sec</label>
+              <input id="secs" type="number" min="0" max="59" value="0" />
+            </div>
+            <button class="timerBtn" id="setBtn">Set</button>
+            <button class="timerBtn secondary" id="startBtn">Start</button>
+            <button class="timerBtn secondary" id="pauseBtn" disabled>Pause</button>
+            <button class="timerBtn danger" id="resetBtn">Reset</button>
+            <span class="timerHint" id="timerHint">Read out loud while it runs.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="catWrap" id="catWrap" aria-label="Cat">
+        <div class="shadow"></div>
+
+        <div class="cat state-idle" id="cat">
+          <div class="tail"></div>
+
+          <div class="body">
+            <div class="belly"></div>
+            <div class="stripe"></div>
+            <div class="stripe s2"></div>
+            <div class="stripe s3"></div>
+            <div class="stripe s4"></div>
+          </div>
+
+          <div class="head">
+            <div class="ear left"></div>
+            <div class="ear right"></div>
+
+            <div class="face">
+              <div class="eyes">
+                <div class="eye">
+                  <div class="sparkle"></div><div class="sparkle s2"></div>
+                  <div class="pupil"></div>
+                </div>
+                <div class="eye">
+                  <div class="sparkle"></div><div class="sparkle s2"></div>
+                  <div class="pupil"></div>
+                </div>
+              </div>
+
+              <div class="muzzle"></div>
+              <div class="nose"></div>
+              <div class="cheek l"></div>
+              <div class="cheek r"></div>
+
+              <div class="whiskers">
+                <div class="sideW left"><i></i><i></i><i></i></div>
+                <div class="sideW right"><i></i><i></i><i></i></div>
+              </div>
+
+              <div class="mouth">
+                <div class="line l"></div>
+                <div class="line r"></div>
+                <div class="jaw"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="legs">
+            <div class="leg"></div>
+            <div class="leg"></div>
+            <div class="leg"></div>
+            <div class="leg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side" aria-label="Inventory">
+      <div class="sideHeader">
+        <div class="title">Inventory</div>
+        <div class="pill">Infinite ♾️</div>
+      </div>
+      <div class="sideBody">
+        <div class="meter">
+          <div class="meterRow">
+            <div>Mic Volume</div>
+            <div><span id="dbLabel">—</span></div>
+          </div>
+          <div class="bar"><i id="volBar"></i></div>
+
+          <div class="meterRow" style="margin-top:10px;">
+            <div>Dominant Frequency</div>
+            <div><span id="hzLabel">—</span></div>
+          </div>
+          <div class="bar"><i id="hzBar"></i></div>
+
+          <div class="tiny">
+            Web Audio FFT → estimates dominant frequency + volume. The cat reacts visually to these values only.
+          </div>
+        </div>
+
+        <div class="foodGrid" id="foodGrid"></div>
+
+        <div class="tiny">
+          Tip: If anything ever “stops working”, open DevTools → Console. In this fixed version, JS no longer crashes from duplicate declarations.
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="ghost" id="ghost" aria-hidden="true">
+    <div class="emoji" id="ghostEmoji">🐟</div>
+    <div class="label" id="ghostLabel">Item</div>
+  </div>
+
+  <script>
+    /***********************
+     * Utilities
+     ***********************/
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const now = () => performance.now();
+
+    /***********************
+     * Elements
+     ***********************/
+    const stage = document.getElementById('stage');
+    const catWrap = document.getElementById('catWrap');
+    const cat = document.getElementById('cat');
+
+    const micBtn  = document.getElementById('micBtn');
+    const playBtn = document.getElementById('playBtn');
+    const sleepBtn = document.getElementById('sleepBtn');
+
+    const volBar  = document.getElementById('volBar');
+    const hzBar   = document.getElementById('hzBar');
+    const dbLabel = document.getElementById('dbLabel');
+    const hzLabel = document.getElementById('hzLabel');
+
+    const ghost = document.getElementById('ghost');
+    const ghostEmoji = document.getElementById('ghostEmoji');
+    const ghostLabel = document.getElementById('ghostLabel');
+    const foodGrid = document.getElementById('foodGrid');
+
+    // Timer elements
+    const timeBig = document.getElementById('timeBig');
+    const timerMode = document.getElementById('timerMode');
+    const timerHint = document.getElementById('timerHint');
+    const minsIn = document.getElementById('mins');
+    const secsIn = document.getElementById('secs');
+    const setBtn = document.getElementById('setBtn');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    /***********************
+     * Cat states
+     ***********************/
+    const State = {
+      IDLE: 'state-idle',
+      LISTENING: 'state-listening',
+      EATING: 'state-eating',
+      PLAYFUL: 'state-playful',
+      PURRING: 'state-purring',
+      SLEEPING: 'state-sleeping',
+      LICKING: 'state-licking',
+      FOCUS: 'state-focus'
+    };
+
+    let currentState = State.IDLE;
+    let stateUntil = 0;
+
+    function setCatState(next){
+      if (currentState === next) return;
+      cat.classList.remove(...Object.values(State));
+      cat.classList.add(next);
+      currentState = next;
+    }
+    function forceState(next, ms){
+      stateUntil = now() + ms;
+      setCatState(next);
+    }
+    function inForcedState(){ return now() <= stateUntil; }
+
+    /***********************
+     * Focus Timer logic (works)
+     ***********************/
+    let timerTotal = 25 * 60; // seconds
+    let timerLeft = timerTotal;
+    let timerRunning = false;
+    let timerEndAt = 0;
+    let lastTimerText = "";
+
+    function fmtTime(sec){
+      const s = Math.max(0, Math.floor(sec));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`;
+    }
+    function updateTimerUI(force=false){
+      const text = fmtTime(timerLeft);
+      if (force || text !== lastTimerText){
+        timeBig.textContent = text;
+        lastTimerText = text;
+      }
+    }
+    function setTimerFromInputs(){
+      const m = clamp(parseInt(minsIn.value || '0', 10), 0, 999);
+      const s = clamp(parseInt(secsIn.value || '0', 10), 0, 59);
+      timerTotal = Math.max(1, m * 60 + s);
+      timerLeft = timerTotal;
+      timerRunning = false;
+      timerEndAt = 0;
+      timerMode.textContent = "Ready";
+      timerHint.textContent = "Read out loud while it runs.";
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      cat.style.setProperty('--focusAura', 0);
+      if (!inForcedState()) setCatState(State.IDLE);
+      updateTimerUI(true);
+    }
+    function startTimer(){
+      if (timerRunning) return;
+      if (timerLeft <= 0) timerLeft = timerTotal;
+      timerRunning = true;
+      timerEndAt = now() + timerLeft * 1000;
+      timerMode.textContent = "Focusing…";
+      timerHint.textContent = "Read out loud—cat listens while you focus.";
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      if (!inForcedState()) setCatState(State.FOCUS);
+    }
+    function pauseTimer(){
+      if (!timerRunning) return;
+      timerRunning = false;
+      timerLeft = Math.max(0, (timerEndAt - now()) / 1000);
+      timerMode.textContent = "Paused";
+      timerHint.textContent = "Paused. Press Start to continue.";
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      cat.style.setProperty('--focusAura', 0.35);
+      updateTimerUI(true);
+    }
+    function resetTimer(){
+      timerRunning = false;
+      timerLeft = timerTotal;
+      timerEndAt = 0;
+      timerMode.textContent = "Ready";
+      timerHint.textContent = "Read out loud while it runs.";
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      cat.style.setProperty('--focusAura', 0);
+      if (!inForcedState()) setCatState(State.IDLE);
+      updateTimerUI(true);
+    }
+    function finishTimer(){
+      timerRunning = false;
+      timerLeft = 0;
+      timerMode.textContent = "Done ✅";
+      timerHint.textContent = "Nice! Tap the cat 🎉";
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      cat.style.setProperty('--focusAura', 0);
+
+      spawnHearts(10);
+      forceState(State.PURRING, 1400);
+      cat.style.setProperty('--petGlow', 1);
+      setTimeout(() => cat.style.setProperty('--petGlow', 0), 900);
+
+      // tiny chime
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 660;
+        g.gain.value = 0.04;
+        o.connect(g).connect(ctx.destination);
+        o.start();
+        o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.25);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+        o.stop(ctx.currentTime + 0.36);
+        setTimeout(() => ctx.close(), 450);
+      }catch{}
+    }
+
+    setBtn.addEventListener('click', setTimerFromInputs);
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+    [minsIn, secsIn].forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') setTimerFromInputs(); }));
+    updateTimerUI(true);
+
+    /***********************
+     * Inventory (restored) + drag/drop feeding (working)
+     ***********************/
+    const items = [
+      { id:'tuna',    emoji:'🐟', name:'Tuna',    desc:'Smooth and savory.', power:0.85, kind:'wet' },
+      { id:'salmon',  emoji:'🐠', name:'Salmon',  desc:'Fancy fish dinner.', power:0.95, kind:'wet' },
+      { id:'kibble',  emoji:'🥣', name:'Kibble',  desc:'Crunch crunch crunch.', power:0.65, kind:'dry' },
+      { id:'chicken', emoji:'🍗', name:'Chicken', desc:'Protein party.', power:0.90, kind:'meat' },
+      { id:'shrimp',  emoji:'🍤', name:'Shrimp',  desc:'Tiny tasty bites.', power:0.80, kind:'meat' },
+      { id:'steak',   emoji:'🥩', name:'Steak',   desc:'Big chomps.', power:1.05, kind:'meat' },
+      { id:'milk',    emoji:'🥛', name:'Milk',    desc:'Slurp & purr.', power:0.55, kind:'drink' },
+      { id:'water',   emoji:'💧', name:'Water',   desc:'Hydration zoom.', power:0.35, kind:'drink' },
+      { id:'sushi',   emoji:'🍣', name:'Sushi',   desc:'Silly luxury.', power:0.90, kind:'wet' },
+      { id:'treats',  emoji:'🧁', name:'Treats',  desc:'Instant happy.', power:1.00, kind:'treat' },
+      { id:'cheese',  emoji:'🧀', name:'Cheese',  desc:'A little snack.', power:0.55, kind:'treat' },
+      { id:'catnip',  emoji:'🌿', name:'Catnip',  desc:'Makes it goofy.', power:0.75, kind:'fun' },
+      { id:'whiskery',emoji:'🥃', name:'Whiskery (Toy)', desc:'Toy prop. Silly reaction.', power:0.70, kind:'toy' }
+    ];
+
+    let draggingItem = null;
+
+    function renderItems(){
+      foodGrid.innerHTML = '';
+      for (const it of items){
+        const el = document.createElement('div');
+        el.className = 'food';
+        el.draggable = true;
+        el.innerHTML = `
+          <div class="count">∞</div>
+          <div class="emoji">${it.emoji}</div>
+          <div class="name">${it.name}</div>
+          <div class="desc">${it.desc}</div>
+        `;
+        el.addEventListener('dragstart', (e) => {
+          draggingItem = it;
+
+          // hide default drag image
+          const img = new Image();
+          img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+          e.dataTransfer.setDragImage(img, 0, 0);
+          e.dataTransfer.effectAllowed = "copy";
+
+          ghostEmoji.textContent = it.emoji;
+          ghostLabel.textContent = it.name;
+          ghost.classList.add('show');
+        });
+        el.addEventListener('dragend', () => {
+          draggingItem = null;
+          ghost.classList.remove('show');
+          catWrap.classList.remove('dropReady');
+        });
+        foodGrid.appendChild(el);
+      }
+    }
+    renderItems();
+
+    function isPointOverElement(x, y, el){
+      const r = el.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    }
+
+    window.addEventListener('dragover', (e) => {
+      if (!draggingItem) return;
+      e.preventDefault();
+      ghost.style.transform = `translate(${e.clientX + 12}px, ${e.clientY + 12}px)`;
+      catWrap.classList.toggle('dropReady', isPointOverElement(e.clientX, e.clientY, catWrap));
+    }, { passive:false });
+
+    window.addEventListener('drop', (e) => {
+      if (!draggingItem) return;
+      e.preventDefault();
+      const overCat = isPointOverElement(e.clientX, e.clientY, catWrap);
+      if (overCat) giveItemToCat(draggingItem);
+      draggingItem = null;
+      ghost.classList.remove('show');
+      catWrap.classList.remove('dropReady');
+    });
+
+    /***********************
+     * Petting + particles
+     ***********************/
+    function spawnHearts(count, x, y){
+      const r = catWrap.getBoundingClientRect();
+      const baseX = x ?? (r.left + r.width * 0.55);
+      const baseY = y ?? (r.top  + r.height * 0.30);
+
+      for (let i=0;i<count;i++){
+        const p = document.createElement('div');
+        p.className = 'particle heart';
+        p.style.left = `${baseX}px`;
+        p.style.top  = `${baseY}px`;
+        document.body.appendChild(p);
+
+        const vx = (Math.random()*2 - 1) * 55;
+        const vy = - (120 + Math.random()*140);
+        const life = 700 + Math.random()*450;
+        const t0 = now();
+
+        const tick = () => {
+          const t = now() - t0;
+          const k = t / life;
+          if (k >= 1){ p.remove(); return; }
+          const wobble = Math.sin((t0 + t) * 0.01) * 6;
+          const xx = baseX + vx * k + wobble;
+          const yy = baseY + vy * k + 240 * k * k;
+          p.style.transform = `translate(${xx - baseX}px, ${yy - baseY}px) scale(${1 - k*0.25})`;
+          p.style.opacity = `${1 - k}`;
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }
+
+    function spawnCrumbs(count){
+      const r = catWrap.getBoundingClientRect();
+      const originX = r.left + r.width * 0.54;
+      const originY = r.top  + r.height * 0.45;
+
+      for (let i=0;i<count;i++){
+        const p = document.createElement('div');
+        p.className = 'particle crumb';
+        p.style.left = `${originX}px`;
+        p.style.top  = `${originY}px`;
+        document.body.appendChild(p);
+
+        const angle = (Math.random() * Math.PI * 2);
+        const vx = Math.cos(angle) * (70 + Math.random()*80);
+        const vy = - (60 + Math.random()*120);
+        const life = 420 + Math.random()*260;
+        const t0 = now();
+
+        const tick = () => {
+          const t = now() - t0;
+          const k = t / life;
+          if (k >= 1){ p.remove(); return; }
+          const xx = originX + vx * k;
+          const yy = originY + vy * k + 170 * k * k;
+          p.style.transform = `translate(${xx - originX}px, ${yy - originY}px) scale(${1 - k*0.35})`;
+          p.style.opacity = `${1 - k}`;
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }
+
+    function pet(x, y){
+      forceState(State.PURRING, 1500);
+      cat.style.setProperty('--squint', 1);
+      cat.style.setProperty('--petGlow', 1);
+      cat.style.setProperty('--tailSpeed', 1.9);
+      cat.style.setProperty('--tailAmp', 1.18);
+
+      spawnHearts(8, x, y);
+
+      setTimeout(() => {
+        if (!inForcedState()){
+          cat.style.setProperty('--squint', 0);
+          cat.style.setProperty('--petGlow', 0);
+          cat.style.setProperty('--tailSpeed', 1);
+          cat.style.setProperty('--tailAmp', 1);
+          if (timerRunning) setCatState(State.FOCUS);
+        }
+      }, 900);
+    }
+
+    /***********************
+     * Feeding -> CHOMP / CHEW animation (working)
+     ***********************/
+    function giveItemToCat(it){
+      if (it.kind === 'toy'){
+        playful(1100);
+        spawnHearts(4);
+        lick(650);
+        return;
+      }
+      feedCat(it.power, it.kind);
+    }
+
+    function feedCat(power, kind){
+      // stronger power => longer chewing session
+      const eatMs = 900 + power * 750;
+      forceState(State.EATING, eatMs);
+
+      cat.style.setProperty('--tailSpeed', 1.25);
+      cat.style.setProperty('--tailAmp', 1.1);
+
+      if (kind === 'fun'){
+        setTimeout(() => playful(1500), 850);
+      } else if (kind === 'drink'){
+        cat.style.setProperty('--tongue', 1);
+        setTimeout(() => cat.style.setProperty('--tongue', 0), 520);
+      }
+
+      // crumbs once at start and once mid-way
+      spawnCrumbs(12 + Math.floor(power * 8));
+      setTimeout(() => spawnCrumbs(8 + Math.floor(power * 5)), 260);
+
+      // CHOMP / CHEW driver: mouthOpen + jaw bounce
+      const start = now();
+      const chewHz = 0.040 + power * 0.010; // faster chew for higher power
+      const chew = () => {
+        const t = now() - start;
+        const k = t / eatMs;
+        if (k >= 1){
+          cat.style.setProperty('--jaw', 0);
+          cat.style.setProperty('--mouthOpen', 0);
+          cat.style.setProperty('--tongue', 0);
+          cat.style.setProperty('--tailSpeed', 1);
+          cat.style.setProperty('--tailAmp', 1);
+          if (timerRunning && !inForcedState()) setCatState(State.FOCUS);
+          return;
+        }
+
+        // bite waveform: 0..1..0
+        const bite = (Math.sin(t * chewHz * Math.PI * 2) * 0.5 + 0.5);
+
+        // "chomp" accent every few bites
+        const accent = (Math.sin(t * 0.010) * 0.5 + 0.5);
+        const chomp = (accent > 0.82) ? 1.15 : 1.0;
+
+        const jaw = clamp(bite * (0.85 + power*0.22) * chomp, 0, 1);
+        const open = clamp(0.18 + jaw * 0.32, 0, 0.70);
+
+        cat.style.setProperty('--jaw', jaw.toFixed(3));
+        cat.style.setProperty('--mouthOpen', open.toFixed(3));
+
+        // tongue flick
+        cat.style.setProperty('--tongue', (bite > 0.78) ? 1 : 0);
+
+        requestAnimationFrame(chew);
+      };
+      requestAnimationFrame(chew);
+    }
+
+    /***********************
+     * Buttons (work)
+     ***********************/
+    function playful(ms=1600){
+      forceState(State.PLAYFUL, ms);
+      cat.style.setProperty('--tailSpeed', 1.7);
+      cat.style.setProperty('--tailAmp', 1.35);
+      setTimeout(() => {
+        if (!inForcedState()){
+          cat.style.setProperty('--tailSpeed', 1);
+          cat.style.setProperty('--tailAmp', 1);
+          if (timerRunning) setCatState(State.FOCUS);
+        }
+      }, Math.min(ms, 900));
+    }
+
+    function nap(ms=2600){
+      forceState(State.SLEEPING, ms);
+      cat.style.setProperty('--squint', 1);
+      cat.style.setProperty('--tailSpeed', .6);
+      cat.style.setProperty('--tailAmp', .75);
+      setTimeout(() => {
+        if (!inForcedState()){
+          cat.style.setProperty('--squint', 0);
+          cat.style.setProperty('--tailSpeed', 1);
+          cat.style.setProperty('--tailAmp', 1);
+          if (timerRunning) setCatState(State.FOCUS);
+        }
+      }, ms);
+    }
+
+    function lick(ms=900){
+      forceState(State.LICKING, ms);
+      cat.style.setProperty('--tongue', 1);
+      cat.style.setProperty('--mouthOpen', .35);
+      setTimeout(() => {
+        cat.style.setProperty('--tongue', 0);
+        cat.style.setProperty('--mouthOpen', 0);
+        if (timerRunning && !inForcedState()) setCatState(State.FOCUS);
+      }, ms);
+    }
+
+    playBtn.addEventListener('click', () => playful(1800));
+    sleepBtn.addEventListener('click', () => nap(3200));
+
+    /***********************
+     * Cat dragging + tap-to-pet (work)
+     ***********************/
+    let draggingCat = false;
+    let catPos = { x: 120, y: 210 };
+    let dragOffset = { x: 0, y: 0 };
+    let tap = { x:0, y:0, t:0, moved:false };
+
+    function applyCatPos(){
+      catWrap.style.left = `${catPos.x}px`;
+      catWrap.style.top  = `${catPos.y}px`;
+    }
+    applyCatPos();
+
+    function pointerDownCat(e){
+      // if dragging item, don't start cat drag
+      if (ghost.classList.contains('show')) return;
+
+      tap.x = e.clientX; tap.y = e.clientY; tap.t = now(); tap.moved = false;
+      draggingCat = true;
+      catWrap.classList.add('dragging');
+
+      const rect = catWrap.getBoundingClientRect();
+      dragOffset.x = e.clientX - rect.left;
+      dragOffset.y = e.clientY - rect.top;
+
+      catWrap.setPointerCapture(e.pointerId);
+    }
+
+    function pointerMoveStage(e){
+      if (!draggingCat) return;
+
+      const dx = e.clientX - tap.x;
+      const dy = e.clientY - tap.y;
+      if ((dx*dx + dy*dy) > 36) tap.moved = true;
+
+      const stageRect = stage.getBoundingClientRect();
+      const w = catWrap.offsetWidth;
+      const h = catWrap.offsetHeight;
+
+      catPos.x = clamp(e.clientX - stageRect.left - dragOffset.x, 0, stageRect.width - w);
+      catPos.y = clamp(e.clientY - stageRect.top  - dragOffset.y, 0, stageRect.height - h);
+      applyCatPos();
+    }
+
+    function pointerUpStage(e){
+      if (!draggingCat) return;
+
+      draggingCat = false;
+      catWrap.classList.remove('dragging');
+      try { catWrap.releasePointerCapture(e.pointerId); } catch {}
+
+      const dt = now() - tap.t;
+      if (!tap.moved && dt < 260){
+        pet(e.clientX, e.clientY);
+      }
+    }
+
+    catWrap.addEventListener('pointerdown', pointerDownCat);
+    stage.addEventListener('pointermove', pointerMoveStage);
+    stage.addEventListener('pointerup', pointerUpStage);
+    stage.addEventListener('pointercancel', pointerUpStage);
+
+    window.addEventListener('resize', () => {
+      const s = stage.getBoundingClientRect();
+      const w = catWrap.offsetWidth;
+      const h = catWrap.offsetHeight;
+      catPos.x = clamp(catPos.x, 0, s.width - w);
+      catPos.y = clamp(catPos.y, 0, s.height - h);
+      applyCatPos();
+    });
+
+    /***********************
+     * Blink + ear twitch + simple autonomous behavior
+     ***********************/
+    let blinkT = 0;
+    function updateBlink(dt){
+      blinkT -= dt;
+      if (blinkT <= 0){
+        blinkT = 1200 + Math.random() * 2200;
+        cat.style.setProperty('--blink', 1);
+        setTimeout(() => cat.style.setProperty('--blink', 0), 90 + Math.random()*40);
+      }
+    }
+
+    let earT = 0;
+    function updateEarTwitch(dt){
+      earT -= dt;
+      if (earT <= 0){
+        earT = 1800 + Math.random()*3200;
+        cat.style.setProperty('--earTwitch', `${(Math.random()*10 - 5).toFixed(1)}deg`);
+        setTimeout(() => cat.style.setProperty('--earTwitch', `0deg`), 140 + Math.random()*120);
+      }
+    }
+
+    let nextAutoplay = 0;
+    function scheduleAutoplay(){ nextAutoplay = now() + (7500 + Math.random() * 11000); }
+    scheduleAutoplay();
+
+    function maybeAutoplay(){
+      if (draggingCat) return;
+      if (inForcedState()) return;
+      if (timerRunning) return;
+      if (audioActive && smoothedVol > 0.09) return;
+      if (now() < nextAutoplay) return;
+
+      const r = Math.random();
+      if (r < 0.25) lick(850);
+      else if (r < 0.60) playful(1500);
+      else nap(2600 + Math.random()*1500);
+
+      scheduleAutoplay();
+    }
+
+    /***********************
+     * Voice wavelength reaction (mic works)
+     ***********************/
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let freqData = null;
+    let timeData = null;
+
+    let smoothedVol = 0;
+    let smoothedHz  = 0;
+    let lastVoiceTime = 0;
+    let audioActive = false;
+
+    micBtn.addEventListener('click', async () => {
+      try{
+        micBtn.disabled = true;
+        micBtn.textContent = "Requesting…";
+
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true }
+        });
+
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaStreamSource(micStream);
+
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.7;
+        src.connect(analyser);
+
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        timeData = new Uint8Array(analyser.fftSize);
+
+        audioActive = true;
+
+        micBtn.textContent = "Mic Enabled";
+        micBtn.classList.add('secondary');
+
+      } catch(err){
+        console.warn(err);
+        micBtn.disabled = false;
+        micBtn.textContent = "Enable Mic";
+        alert("Microphone access failed. Use HTTPS and allow mic permission.");
+      }
+    });
+
+    function computeRMS(){
+      analyser.getByteTimeDomainData(timeData);
+      let sum = 0;
+      for (let i=0;i<timeData.length;i++){
+        const v = (timeData[i] - 128) / 128;
+        sum += v*v;
+      }
+      return Math.sqrt(sum / timeData.length);
+    }
+
+    function computeDominantHz(){
+      analyser.getByteFrequencyData(freqData);
+      const nyquist = audioCtx.sampleRate / 2;
+      const binHz = nyquist / freqData.length;
+
+      const minHz = 70;
+      const maxHz = 1400;
+
+      const minBin = Math.floor(minHz / binHz);
+      const maxBin = Math.min(freqData.length - 1, Math.ceil(maxHz / binHz));
+
+      let peakBin = minBin;
+      let peakVal = 0;
+      for (let i=minBin; i<=maxBin; i++){
+        const v = freqData[i];
+        if (v > peakVal){ peakVal = v; peakBin = i; }
+      }
+      return { hz: peakBin * binHz, strength: peakVal / 255 };
+    }
+
+    /***********************
+     * Pupil tracking
+     ***********************/
+    let pointer = { x: null, y: null };
+    let pupilSm = { x: 0, y: 0 };
+
+    window.addEventListener('pointermove', (e) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+    }, { passive:true });
+
+    function pupilUpdate(){
+      const r = catWrap.getBoundingClientRect();
+      if (pointer.x == null || pointer.y == null){
+        cat.style.setProperty('--pupilX', `0px`);
+        cat.style.setProperty('--pupilY', `0px`);
+        return;
+      }
+      const cx = r.left + r.width * 0.55;
+      const cy = r.top  + r.height * 0.22;
+
+      const dx = clamp((pointer.x - cx) / 220, -1, 1);
+      const dy = clamp((pointer.y - cy) / 220, -1, 1);
+
+      pupilSm.x = lerp(pupilSm.x, dx, 0.12);
+      pupilSm.y = lerp(pupilSm.y, dy, 0.12);
+
+      cat.style.setProperty('--pupilX', `${(pupilSm.x * 6).toFixed(2)}px`);
+      cat.style.setProperty('--pupilY', `${(pupilSm.y * 5).toFixed(2)}px`);
+    }
+
+    /***********************
+     * Main loop
+     ***********************/
+    let prev = now();
+    function tick(){
+      const t = now();
+      const dt = t - prev;
+      prev = t;
+
+      updateBlink(dt);
+      updateEarTwitch(dt);
+      maybeAutoplay();
+      pupilUpdate();
+
+      // Timer tick
+      if (timerRunning){
+        timerLeft = Math.max(0, (timerEndAt - t) / 1000);
+        updateTimerUI();
+
+        if (!inForcedState() && !draggingCat) setCatState(State.FOCUS);
+
+        const frac = clamp(timerLeft / Math.max(timerTotal,1), 0, 1);
+        const pulse = (Math.sin(t * 0.004) * 0.08 + 0.92);
+        cat.style.setProperty('--focusAura', (0.55 + (1-frac) * 0.25) * pulse);
+
+        if (timerLeft <= 0.001) finishTimer();
+      }
+
+      // Voice reaction
+      if (analyser && audioCtx){
+        const rms = computeRMS();
+        const { hz, strength } = computeDominantHz();
+
+        const vol = clamp(rms * 4.2, 0, 1);
+        smoothedVol = lerp(smoothedVol, vol, 0.15);
+        smoothedHz  = lerp(smoothedHz, hz, 0.12);
+
+        const dbApprox = 20 * Math.log10(Math.max(rms, 1e-4));
+        dbLabel.textContent = `${dbApprox.toFixed(1)} dB`;
+        hzLabel.textContent = `${Math.round(smoothedHz)} Hz`;
+
+        volBar.style.width = `${Math.round(smoothedVol * 100)}%`;
+        const hzNorm = clamp((smoothedHz - 70) / (1400 - 70), 0, 1);
+        hzBar.style.width = `${Math.round(hzNorm * 100)}%`;
+
+        const voiced = (smoothedVol > 0.08 && strength > 0.10);
+
+        if (voiced){
+          lastVoiceTime = t;
+
+          // If not forced by eating/pet etc., show listening unless timer is running (then keep focus state)
+          if (!inForcedState() && !draggingCat && !timerRunning){
+            setCatState(State.LISTENING);
+          }
+
+          const earBase = lerp(-7, 12, hzNorm);
+          const earWiggle = (Math.sin(t * 0.02) * 6) * smoothedVol;
+          cat.style.setProperty('--earL', `${clamp(earBase + earWiggle, -20, 20)}deg`);
+          cat.style.setProperty('--earR', `${clamp(earBase - earWiggle, -20, 20)}deg`);
+
+          const headTilt = clamp(lerp(-8, 8, hzNorm) + Math.sin(t * 0.01) * (smoothedVol * 4), -14, 14);
+          cat.style.setProperty('--headTilt', `${headTilt}deg`);
+
+          // subtle mouth movements while listening/reading (not command recognition)
+          if (!inForcedState()){
+            const mouthMax = timerRunning ? 0.18 : 0.35;
+            cat.style.setProperty('--mouthOpen', clamp(smoothedVol * 0.25, 0, mouthMax));
+            cat.style.setProperty('--jaw', clamp(Math.sin(t * 0.03) * smoothedVol * 0.14, 0, timerRunning ? 0.12 : 0.20));
+            cat.style.setProperty('--tailSpeed', timerRunning ? 0.95 : 1.10);
+            cat.style.setProperty('--tailAmp', timerRunning ? 0.9 : 1.02);
+          }
+
+        } else {
+          cat.style.setProperty('--earL', `0deg`);
+          cat.style.setProperty('--earR', `0deg`);
+          cat.style.setProperty('--headTilt', `0deg`);
+
+          if (!inForcedState() && !draggingCat){
+            if (t - lastVoiceTime > 350){
+              if (timerRunning){
+                setCatState(State.FOCUS);
+              } else {
+                setCatState(State.IDLE);
+              }
+              cat.style.setProperty('--mouthOpen', 0);
+              cat.style.setProperty('--jaw', 0);
+              if (!timerRunning){
+                cat.style.setProperty('--tailSpeed', 1);
+                cat.style.setProperty('--tailAmp', 1);
+              }
+            }
+          }
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    window.addEventListener('beforeunload', () => {
+      if (micStream) micStream.getTracks().forEach(tr => tr.stop());
+      if (audioCtx) audioCtx.close();
+    });
+  </script>
+</body>
+</html>
